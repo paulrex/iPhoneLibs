@@ -7,25 +7,35 @@
 
 #import <Foundation/Foundation.h>
 
-
 @interface DownloadProgress : NSObject
 {
-    float content_length;
-    float downloaded_length;
+    // Progress tracking variables.
+    float                   contentLength;
+    float                   downloadedLength;
     
-    UIAlertView *alert_view;
+    // UIView components
+    UIAlertView             *alertView;
     UIActivityIndicatorView *spinner;
     
-    UIProgressView *progress_bar;
+    UIProgressView          *progressBar;
 }
 
-@property (nonatomic, assign) float content_length;
-@property (nonatomic, retain) UIAlertView *alert_view;
-@property (nonatomic, retain) UIActivityIndicatorView *spinner;
-@property (nonatomic, retain) UIProgressView *progress_bar;
+@property (nonatomic, assign) float     contentLength;
 
-@property (nonatomic, retain) NSString *message;
+// These properties are not synthesized by the compiler.
+// The accessor functions are manually written to allow access to the alertView.
+@property (nonatomic, retain) NSString  *message;
+@property (nonatomic, assign) BOOL      visible;
 
-- (void) add_downloaded_length: (float) x;
+// This function is designed for use with any NSNetworkConnection delegate.
+
+// First, examine the headers returned in connectionDidReceiveResponse:
+// (see NetworkCenter.m for example) to get the full content length.
+// Use that to set the contentLength instance variable of this object.
+
+// Each call to connectionDidReceiveData will have one chunk of data,
+// with corresponding length. Call this function with that data's length.
+// This object will track progress and display it to the user with a progress bar.
+- (void) addDownloadedLength: (float) x;
 
 @end
