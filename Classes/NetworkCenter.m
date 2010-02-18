@@ -7,21 +7,28 @@
 //
 
 #import "NetworkCenter.h"
+
+#if kEnableJsonParsing
 #import "JSON.h"
+#endif
 
 @implementation NetworkCenter
 
 @synthesize delegate;
 
-+ (NSURLRequest *) new_request_with_server: (NSString *) server_string and_method: (NSString *) method
-                                  and_data: (NSDictionary *) data_dictionary
++ (NSURLRequest *) newRequestWithServer: (NSString *) serverAddress
+                                 method: (NSString *) method
+                                   data: (NSDictionary *) dataDictionary
 {
-    NSURL *server_url = [[NSURL  alloc] initWithString:server_string];
-    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:server_url cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData timeoutInterval:60];
-    [server_url release];
+    NSURL *serverURL = [[NSURL alloc] initWithString:serverAddress];
+    NSMutableURLRequest *request = [[NSMutableURLRequest alloc]
+                                    initWithURL:serverURL
+                                    cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData
+                                    timeoutInterval:10.0];
+    [serverURL release];
     [request setHTTPMethod:method];
     
-    if ([method isEqualToString:@"POST"] && (data_dictionary != nil))
+    if ([method isEqualToString:@"POST"] && (dataDictionary != nil))
     {
         NSString *boundary = @"------AaB03x";
         NSString *contentType = [NSString stringWithFormat:@"multipart/form-data; boundary=%@", boundary];
@@ -29,12 +36,12 @@
         
         NSMutableString *postString = [[NSMutableString alloc] init];
         
-        NSArray *inputKeys = [data_dictionary allKeys];
+        NSArray *inputKeys = [dataDictionary allKeys];
         for (int i = 0; i < [inputKeys count]; i++)
         {
             [postString appendFormat:@"--%@\r\n", boundary];
             [postString appendFormat:@"Content-Disposition: form-data; name=\"%@\"\r\n\r\n", [inputKeys objectAtIndex:i]];
-            [postString appendFormat:@"%@", [data_dictionary objectForKey:[inputKeys objectAtIndex:i]]];        
+            [postString appendFormat:@"%@", [dataDictionary objectForKey:[inputKeys objectAtIndex:i]]];        
             [postString appendFormat:@"\r\n"];
         }
         [postString appendFormat:@"--%@--\r\n", boundary];
@@ -47,10 +54,13 @@
     return request;
 }
 
-+ (void) post_variables: (NSDictionary *) requestVariables to_address: (NSString *) serverAddress with_delegate: (id) delegate
++ (void) postVariables: (NSDictionary *) requestVariables
+              toServer: (NSString *) serverAddress
+          withDelegate: (id) delegate
 {
-    NSURLRequest *request = [NetworkCenter new_request_with_server:serverAddress and_method:@"POST" and_data:requestVariables];
+    NSURLRequest *request = [NetworkCenter newRequestWithServer:serverAddress method:@"POST" data:requestVariables];
     
+    // This call will begin loading the data for the request immediately.
     [NSURLConnection connectionWithRequest:request delegate:delegate];
     [request release];
 }
@@ -60,16 +70,18 @@
     self = [super init];
     if (self)
     {
-        connectionToInfoMapping = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks,
+        connectionToInfoMapping = CFDictionaryCreateMutable(kCFAllocatorDefault,
+                                                            0,
+                                                            &kCFTypeDictionaryKeyCallBacks,
                                                             &kCFTypeDictionaryValueCallBacks);
     }
     return self;
 }
 
 
-- (void) get_json_from_server: (NSString *) server_string
+- (void) getJsonFromServer: (NSString *) serverAddress
 {
-    NSURLRequest *request = [NetworkCenter new_request_with_server:server_string and_method:@"GET" and_data:nil];    
+    NSURLRequest *request = [NetworkCenter newRequestWithServer:serverAddress method:@"GET" data:nil];
     NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:self startImmediately:YES];
     
     NSMutableDictionary *connectionDictionary = [[NSMutableDictionary alloc] init];
@@ -78,9 +90,10 @@
     [connectionDictionary release];
 }
 
-- (void) post_variables: (NSDictionary *) request_variables to_address: (NSString *) server_address
+- (void) postVariables: (NSDictionary *) requestVariables
+              toServer: (NSString *) serverAddress
 {
-    NSURLRequest *request = [NetworkCenter new_request_with_server:server_address and_method:@"POST" and_data:request_variables];
+    NSURLRequest *request = [NetworkCenter newRequestWithServer:serverAddress method:@"POST" data:requestVariables];
     NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:request delegate:self startImmediately:YES];
     
     NSMutableDictionary *connectionDictionary = [[NSMutableDictionary alloc] init];
@@ -91,11 +104,7 @@
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
-    DebugLog(@"response = %@", response);
-    NSHTTPURLResponse *r = (NSHTTPURLResponse *) response;
-    DebugLog(@"status code = %d", [r statusCode]);
-    DebugLog(@"%@", [r allHeaderFields]);
-    
+    NSHTTPURLResponse *r = (NSHTTPURLResponse *) response;    
     if ([r statusCode] != 200)
     {
         [connection cancel];
@@ -117,6 +126,7 @@
     [[connectionInfo objectForKey:@"receivedData"] setData:nil];
     
     // Fail silently.
+    // TODO: Add failure method to delegate.
 
     /*
     UIAlertView *errorAlert = [[UIAlertView alloc] initWithTitle:@"Connection Failed"
@@ -139,6 +149,7 @@
     NSString *responseString = [[NSString alloc] initWithData:[connectionInfo objectForKey:@"receivedData"]
                                                      encoding:NSUTF8StringEncoding];
 
+#if kEnableJsonParsing
     SBJSON *jsonParser = [SBJSON new];
     
     NSError *parseError;
@@ -153,7 +164,9 @@
     
     if ([self.delegate respondsToSelector:@selector(connection_returned_json:)])
         [self.delegate connection_returned_json:returnDictionary];
+#endif
     
+    [responseString release];
     CFDictionaryRemoveValue(connectionToInfoMapping, connection);
     [connection release];
 }    

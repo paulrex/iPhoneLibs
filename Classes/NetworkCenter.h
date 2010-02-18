@@ -8,14 +8,18 @@
 
 #import <Foundation/Foundation.h>
 
+#define kEnableJsonParsing 0
+
 @protocol NetworkCenterDelegate <NSObject>
 
 @optional
 
-- (void) connection_returned_json: (NSDictionary *) return_dictionary;
+- (void) connectionReturnedJson: (NSDictionary *) return_dictionary;
 
 @end
 
+// This object can handle multiple network connections.
+// It comes with various utility methods for communication via HTTP requests.
 
 @interface NetworkCenter : NSObject
 {
@@ -25,16 +29,28 @@
 
 @property (nonatomic, assign) id<NetworkCenterDelegate> delegate;
 
-+ (NSURLRequest *) new_request_with_server: (NSString *) server_string
-                                and_method: (NSString *) method
-                                  and_data: (NSDictionary *) data_dictionary;
+// Allocates and returns a new NSURLRequest with the specified variables.
+// Currently, the dataDictionary is only supported for POST requests.
+// TODO: Support dataDictionary for GET requests via URL encoding of variables.
++ (NSURLRequest *) newRequestWithServer: (NSString *) serverAddress
+                                 method: (NSString *) method
+                                   data: (NSDictionary *) dataDictionary;
 
-+ (void) post_variables: (NSDictionary *) requestVariables
-             to_address: (NSString *) serverAddress
-          with_delegate: (id) delegate;
+// Creates and POSTs a request to the given address, setting a delegate if given.
++ (void) postVariables: (NSDictionary *) requestVariables
+              toServer: (NSString *) serverAddress
+          withDelegate: (id) delegate;
 
+// Standard initialization method.
 - (id) init;
-- (void) get_json_from_server: (NSString *) server_string;
-- (void) post_variables: (NSDictionary *) request_variables to_address: (NSString *) server_address;
+
+// Sends a GET request to the given address, expecting a JSON response.
+// Upon receipt, this object will call the connectionReturnedJson method of its delegate.
+- (void) getJsonFromServer: (NSString *) serverAddress;
+
+// Sends a POST request to the given address, with requestVariables attached.
+// If JSON response is received, this object calls the delegate's connectionReturnedJson method.
+- (void) postVariables: (NSDictionary *) requestVariables
+              toServer: (NSString *) serverAddress;
 
 @end

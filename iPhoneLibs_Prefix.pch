@@ -6,3 +6,13 @@
     #import <Foundation/Foundation.h>
     #import <UIKit/UIKit.h>
 #endif
+
+#define DEBUG
+
+#ifdef DEBUG
+#define DebugLog( s, ... ) NSLog( @"<%p %@:(%d)> %s | %@", self, [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__, __FUNCTION__, [NSString stringWithFormat:(s), ##__VA_ARGS__] )
+#else
+#define DebugLog( s, ... ) 
+#endif
+
+#define LogDatabaseError( ) DebugLog( @"%s", sqlite3_errmsg( database ) )

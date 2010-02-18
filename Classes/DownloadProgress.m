@@ -57,14 +57,14 @@
 
 - (void) setMessage: (NSString *) newMessage
 {
-    NSString *formattedMessage = [[NSString alloc] initWithFormat:@"\n\n%@\n\n", new_message];
+    NSString *formattedMessage = [[NSString alloc] initWithFormat:@"\n\n%@\n\n", newMessage];
     alertView.message = formattedMessage;
     [formattedMessage release];
 }
 
 - (BOOL) visible
 {
-    return [alertView.visible];
+    return alertView.visible;
 }
 
 - (void) setVisible: (BOOL) newVisibility
