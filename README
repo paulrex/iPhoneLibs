@@ -1,0 +1,5 @@
+iPhoneLibs is a collection of various useful classes. The repo currently contains:
+
+NetworkCenter allows for communication with HTTP servers using GET and POST requests. It references the SBJSON class to allow for parsing of JSON return values.
+
+DownloadProgress is a customized UIAlertView that can be used in conjunction with NetworkCenter to provide blocking downloads and track download progress.
