@@ -70,12 +70,13 @@
 - (void) setVisible: (BOOL) newVisibility
 {
     // Check to see if we need to do anything.
-    if (alertView.visible && newVisibility) return;
-    if (!alertView.visible && !newVisibility) return;
+    if (alertView.visible == newVisibility) return;
     
     // If so, show / hide the alertView as needed.
-    if (newVisibility) [alertView show];
-    if (!newVisibility) [alertView dismissWithClickedButtonIndex:-1 animated:YES];
+    if (newVisibility)
+        [alertView show];
+    else
+        [alertView dismissWithClickedButtonIndex:-1 animated:YES];
 }
 
 
