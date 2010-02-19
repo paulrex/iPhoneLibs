@@ -17,10 +17,10 @@
     if (self)
     {
         alertView = [[UIAlertView alloc] initWithTitle:nil
-                                                message:@"\n\nConnecting...\n\n"
-                                               delegate:self
-                                      cancelButtonTitle:@"Cancel"
-                                      otherButtonTitles:nil];
+                                               message:@"\n\nConnecting...\n\n"
+                                              delegate:self                                         
+                                     cancelButtonTitle:@"Cancel"
+                                     otherButtonTitles:nil];
         
         spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
         spinner.center = CGPointMake(136, 30);
